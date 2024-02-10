@@ -1,0 +1,6 @@
+@RagCompletionService_HostAddress = http://localhost:5262
+
+GET {{RagCompletionService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

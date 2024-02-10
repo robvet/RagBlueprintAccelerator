@@ -1,0 +1,59 @@
+﻿@page "/pocapi"
+@rendermode InteractiveAuto
+@attribute [StreamRendering(true)]
+
+@using RagBlueprintAccelerator.Client;
+@using RagBlueprintAccelerator.Client.Services
+@using Microsoft.JSInterop;
+@inject IPOCService POCService
+@inject PersistentComponentState PersistentComponentState
+@inject IJSRuntime JSRuntime
+
+
+
+@* @rendermode InteractiveServer *@
+
+<PageTitle>POC-API</PageTitle>
+<h1>POC-API</h1>
+
+
+<script>
+     
+function updateText1(text1value) {
+        document.getElementById("text1").value = text1value;
+    }
+
+</script>
+
+<div id="chatcontainer" style="height:550px; width:80%; overflow: scroll;">
+<textarea id="text1" rows="3" cols="60"/>
+<br />
+<button class="btn btn-primary"
+        @onclick="GetIt">
+    Call ChatGPT
+</button>
+<span>&nbsp;</span>
+<button class="btn btn-info"
+        @onclick="PostIt">
+    Post
+</button>
+</div>
+
+@code {
+
+    PersistingComponentStateSubscription persistingSubscription;
+
+    string text1value = "";
+
+    async Task GetIt()
+    {
+        string response = await POCService.CallPOCServiceGet();
+        await JSRuntime.InvokeVoidAsync("updateText1", response);
+    }
+
+    async Task PostIt()
+    {
+        string response = await POCService.CallPOCServicePost();
+        await JSRuntime.InvokeVoidAsync("updateText1", response);
+    }
+}

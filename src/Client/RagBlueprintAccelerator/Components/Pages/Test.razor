@@ -1,0 +1,52 @@
+﻿@page "/test"
+@* @rendermode InteractiveAuto *@
+
+@rendermode InteractiveServer
+@attribute [StreamRendering(true)]
+
+<div id="chatcontainer" style="height:550px; width:80%; overflow: scroll;">
+<textarea rows="3" cols="60"/>
+<br />
+
+    <div class="toast-body">
+        <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
+        <i class="fas fa-camera-retro"></i>
+        Hey Now        
+    </div>
+
+
+@* <button class="btn btn-primary"
+        @onclick="CallChatGPT">
+    Call ChatGPT
+</button>
+<span>&nbsp;</span>
+<button class="btn btn-info"
+        @onclick="RestartChatGPT">
+    Restart
+</button> *@
+</div>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+
+
+    // async Task CallChatGPT()
+    // {
+    //     var message = "Hello";
+    // }
+
+    // async Task RestartChatGPT()
+    // {
+    //     var message = "Hello";
+    // }
+
+
+}

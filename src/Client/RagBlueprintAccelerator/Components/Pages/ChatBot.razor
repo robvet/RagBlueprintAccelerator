@@ -1,0 +1,337 @@
+﻿@page "/DONTUSETHIS"
+
+@* @rendermode InteractiveAuto *@
+@rendermode InteractiveServer
+@attribute [StreamRendering(true)]
+
+@using Azure.AI.OpenAI;
+@using Azure;
+@using Markdig;
+@using RagBlueprintAccelerator.Client.Plumbing;
+@using Shared;
+@using Shared.Enums;
+@using RagBlueprintAccelerator;
+
+@inject IConfiguration _configuration
+@inject Contracts.IChatCompletion ChatCompletion
+@inject IJSRuntime _jsRuntime
+
+<PageTitle>ChatBot</PageTitle>
+
+<style>
+    textarea {
+        border: 1px dashed #888;
+        border-radius: 5px;
+        width: 80%;
+        overflow: auto;
+        background: #f7f7f7
+    }
+
+    /* improved CSS for speech bubbles */
+
+    .Assistant, .User {
+        position: relative;
+        font-family: arial;
+        font-size: 1.1em;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+        .Assistant:after, .User:after {
+            content: '';
+            border: 20px solid transparent;
+            position: absolute;
+            margin-top: -30px;
+        }
+
+    .User {
+        background: #03a9f4;
+        color: #fff;
+        margin-left: 20%;
+        margin-right: 100px;
+        top: 30%;
+        text-align: right;
+    }
+
+    .Assistant {
+        background: #4CAF50;
+        color: #fff;
+        margin-left: 100px;
+        margin-right: 20%;
+    }
+
+    .User:after {
+        border-left-color: #03a9f4;
+        border-right: 0;
+        right: -20px;
+    }
+
+    .Assistant:after {
+        border-right-color: #4CAF50;
+        border-left: 0;
+        left: -20px;
+    }
+
+    .msg {
+        font-size: medium;
+    }
+</style>
+
+<script>
+    window.ScrollToBottom = (elementName) => {
+        element = document.getElementById(elementName);
+        element.scrollTop = element.scrollHeight - element.clientHeight;
+    }
+</script>
+
+
+
+
+
+
+
+
+<h1>ChatBot</h1>
+<p style="font-size:small"><b>Total Tokens:</b> @TotalTokens &nbsp;&nbsp;&nbsp;<b>Tokens for Prompt:</b> @PromptTokens &nbsp;&nbsp;&nbsp;<b>Tokens for Completion:</b> @CompletionTokens </p>
+<div id="chatcontainer" style="height:60vh; width:80%; overflow: scroll;">
+  @if (RenderChatMessages)
+    {
+        @foreach (var item in chatMessages)
+        {
+            <div>
+                @if (item.Role == Role.User)
+                {
+                    <div style="float: right; margin-right: 30px; margin-top: 10px">
+                        <b>User</b>
+                    </div>
+                    <div class="@item.Role">
+                        <div class="msg">
+                            @item.Content
+                        </div>
+                    </div>
+                }
+
+                @if (item.Role == Role.Assistant)
+                {
+                    <div style="float: left; margin-left: 10px; margin-top: 10px">
+                        <b>Assistant&nbsp;&nbsp;</b>
+                    </div>
+                    <div class="@item.Role">
+                        <div class="msg">
+                            @if (item.Content != null)
+                            {
+                                @((MarkupString)item.Content.ToHtml())
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@if (!Processing)
+{
+    <textarea rows="3" cols="60" @bind="prompt" />
+    <br />
+
+    <button class="btn btn-primary"
+        @onclick="async() => { CallChatGPT(); }">
+        Call ChatGPT
+    </button>
+
+    <span>&nbsp;</span>
+
+    <button class="btn btn-info"
+            @onclick="RestartChatGPT">
+        Reset
+    </button>
+}
+else
+{
+    <br>
+    <h4>Processing...</h4>
+}
+<br /><p style="color:red">@ErrorMessage</p>
+
+
+@code {
+    static List<ChatMessage> chatMessages = new List<ChatMessage>();
+    private string prompt = "Write a 10 word description of Azure OpenAI";
+    private string systemPrompt = "";
+    private string ErrorMessage = "";
+    private bool Processing = false;
+    static private int TotalTokens = 0;
+    static private int PromptTokens = 0;
+    static private int CompletionTokens = 0;
+    // Add a new boolean variable to control the rendering of the foreach loop
+    bool RenderChatMessages = true;
+
+    protected override void OnInitialized()
+    {
+        // chatMessages.Add(new ChatMessage(ChatRole.System, systemPrompt));
+    }
+
+    protected override async Task
+    OnAfterRenderAsync(bool firstRender)
+    {
+        // Set RenderChatMessages to false to prevent the foreach loop from executing
+        //RenderChatMessages = false;
+
+        try
+        {
+            await _jsRuntime.InvokeAsync<string>(
+                "ScrollToBottom", "chatcontainer"
+            );
+        }
+        catch
+        {
+            // do nothing if this fails
+        }
+    }
+
+    async Task CallChatGPT()
+    {
+        try
+        {
+            // Set Processing to true to indicate that the method is processing
+            Processing = true;
+
+            // // Set RenderChatMessages to false to prevent the foreach loop from executing
+            // //RenderChatMessages = false;
+
+            // // Call StateHasChanged to refresh the UI
+            // //StateHasChanged();
+
+            // // Clear any previous error messages
+            // ErrorMessage = "";
+
+            // // Add the new message to chatMessages
+            // chatMessages.Add(new ChatMessage(Role.User, prompt));
+
+            // var ezCompletionOptions = new EZCompletionOptions()
+            //     {
+            //         Temperature = (float)0.7,
+            //         MaxTokens = 2000,
+            //         //NucleusSamplingFactor = (float)0.95,
+            //         FrequencyPenalty = 0,
+            //         PresencePenalty = 0,
+
+            //         UserPrompt = prompt,
+
+            //         // Chain together ChatHistory Assistant messages into single string by chaining Linq statements
+            //         // ChatHistory = string.Join(" ", chatMessages.Where(x => x.Role == ChatRole.Assistant).Select(x => x.Content))
+
+            //         // Save for later feature
+            //         // SystemPrompt = new ChatRequestSystemMessage("You are helpful Assistant"),
+            //     };
+
+
+            // // Call OpenAI ChatBot Service to execute completion
+            // (ChatCompletions completion, ChatCompletions followup, int promptTokens, int totalTokens) = 
+            //     await ChatCompletion.ChatCompletionAsync(ezCompletionOptions);
+
+            // // Create a new Message object with the response and other details
+            // // and add it to the messages list
+            // var choice = completion.Choices.FirstOrDefault();
+
+            // if (choice != null)
+            // {
+            //     if (choice.Message != null)
+            //     {
+            //         chatMessages.Add(new ChatMessage(Role.Assistant, choice.Message.Content));
+            //     }
+            // }
+
+            // // Update the total number of tokens used by the API
+            // TotalTokens = TotalTokens + totalTokens;
+            // PromptTokens = promptTokens;
+            // CompletionTokens = totalTokens - promptTokens;
+
+            // // Set RenderChatMessages to true to allow the foreach loop to execute again
+            // RenderChatMessages = true;
+        }
+        catch (Exception ex)
+        {
+            // Set ErrorMessage to the exception
+            // message if an error occurs
+            ErrorMessage = ex.Message;
+
+            // Remove the last message from chatMessages
+            chatMessages.RemoveAt(chatMessages.Count - 1);
+        }
+        finally
+        {
+            // Clear the prompt variable
+            prompt = "";
+
+            // Set Processing to false to indicate
+            // that the method is done processing
+            Processing = false;
+
+            // Call StateHasChanged to refresh the UI
+            StateHasChanged();
+        }
+    }
+
+    void RestartChatGPT()
+    {
+        prompt = "Write a 10 word description of Azure OpenAI";
+        // chatMessages = new List<ChatMessage>();
+        TotalTokens = 0;
+        PromptTokens = 0;
+        CompletionTokens = 0;
+
+        chatMessages.Clear();
+
+        ErrorMessage = "";
+
+        StateHasChanged();
+    }
+
+
+
+    // foreach (var message in _chatMessages)
+    // {
+    //     //chatCompletionsOptions.Messages.Add(message);
+    //     _customCompletionOptions.ChatMessages.Add(message);
+    // }
+
+    // // call ChatBot Service with the prompt to execute completion
+
+    // var completion = await ChatCompletion.ChatCompletionAsync(ezCompletionOptions);
+
+
+    // // // Call the GetChatCompletionsAsync method
+    // // Response<ChatCompletions> responseWithoutStream =
+    // // await client.GetChatCompletionsAsync(
+    // //     DeploymentOrModelName,
+    // //     chatCompletionsOptions);
+
+    // // // Get the ChatCompletions object from the response
+    // // ChatCompletions result = responseWithoutStream.Value;
+
+    // // Create a new OpenAIClient object
+    // // with the provided API key and Endpoint
+    // OpenAIClient client = new OpenAIClient(
+    //     new Uri(Endpoint),
+    //     new AzureKeyCredential(Key));
+
+    // // Create a new ChatCompletionsOptions object
+    // var chatCompletionsOptions = new ChatCompletionsOptions()
+    //     {
+    //         Temperature = (float)0.7,
+    //         MaxTokens = 2000,
+    //         NucleusSamplingFactor = (float)0.95,
+    //         FrequencyPenalty = 0,
+    //         PresencePenalty = 0,
+    //     };
+
+    // // Add the prompt to the chatCompletionsOptions object
+    // foreach (var message in ChatMessages)
+    // {
+    //     chatCompletionsOptions.Messages.Add(message);
+    // }
+
+}
