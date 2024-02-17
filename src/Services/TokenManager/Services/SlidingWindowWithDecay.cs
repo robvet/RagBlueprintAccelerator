@@ -1,9 +1,9 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
-using Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Shared.Configuration;
+using Shared.Contracts;
 using Shared.Enums;
 using Shared.Models;
 using TokenManager.Prompts;

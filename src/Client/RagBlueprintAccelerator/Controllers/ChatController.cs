@@ -1,10 +1,10 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
-using Contracts;
 using RagBlueprintAccelerator.Client.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
+using Shared.Contracts;
 
 
 namespace RagBlueprintAccelerator.Controllers

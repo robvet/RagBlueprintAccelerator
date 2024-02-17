@@ -1,6 +1,6 @@
 ﻿using Shared.Models;
 
-namespace Contracts
+namespace Shared.Contracts
 {
     public interface IDataExtractionCompletion
     {

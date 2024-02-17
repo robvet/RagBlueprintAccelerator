@@ -1,7 +1,7 @@
 ﻿using Azure.AI.OpenAI;
 using Shared.Models;
 
-namespace Contracts
+namespace Shared.Contracts
 {
     public interface IChatCompletion
     {

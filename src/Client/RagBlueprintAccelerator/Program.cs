@@ -1,5 +1,4 @@
 using ChatBotService.Services;
-using Contracts;
 using RagBlueprintAccelerator.Client;
 using RagBlueprintAccelerator.Client.Contracts;
 using RagBlueprintAccelerator.Client.Pages;
@@ -8,6 +7,7 @@ using RagBlueprintAccelerator.Components;
 using TokenManager.Services;
 using RagBlueprintAccelerator;
 using SimpleChatService.Services;
+using Shared.Contracts;
 
 
 var builder = WebApplication.CreateBuilder(args);

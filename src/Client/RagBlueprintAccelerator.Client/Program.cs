@@ -1,4 +1,4 @@
-using Contracts;
+using Shared.Contracts;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using RagBlueprintAccelerator.Client;
 using RagBlueprintAccelerator.Client.Contracts;

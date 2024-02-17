@@ -2,10 +2,10 @@
 using Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Contracts;
 using Shared.Models;
 using Shared.Enums;
 using SimpleChatService.Prompts;
+using Shared.Contracts;
 
 namespace SimpleChatService.Services
 {

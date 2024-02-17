@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Shared.Models;
 
-namespace Contracts
+namespace Shared.Contracts
 {
     public interface IDataExtraction
     {

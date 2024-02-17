@@ -22,7 +22,7 @@
 
 <style>
     textarea {
-        border: 2px dashed #888; */
+        border: 2px dashed #888; 
         border-radius: 10px;
         width: 80%;
         overflow: auto;
@@ -306,6 +306,11 @@
     List<ChatMessage> chatHistory = new List<ChatMessage>();   
 
     string[] suggestions;
+
+    public SimpleChat(string[] suggestions)
+    {
+        this.suggestions = suggestions;
+    }
 
     private string prompt = "Write a 10 word description of Azure OpenAI";
     private string systemPrompt = "";

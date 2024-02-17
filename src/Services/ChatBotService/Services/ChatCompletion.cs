@@ -2,10 +2,10 @@
 using Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Contracts;
 using ChatBotService.Prompts;
 using Shared.Models;
 using Shared.Enums;
+using Shared.Contracts;
 
 namespace ChatBotService.Services
 {
