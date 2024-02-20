@@ -6,21 +6,6 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
 
-
-    
-
-
-
-@* *****************************
-*** Keeping this page for now for reference, but it's not being used in this Blazor 8 app
-***************************** *@
-
-
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -45,6 +30,15 @@
 </head>
 
 <body>
+    
+    <!-- adding following to handle the slow start-up time -->
+    <component type="typeof(RagBlueprintAccelerator.Components.Pages.Loading)" render-mode="ServerPrerendered" />
+   
+    <div id="app">
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </div>
+    
+    
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
     @* <p>Test - This should appear on all pages</p> *@
@@ -61,6 +55,9 @@
         <a class="dismiss">🗙</a>
     </div>
 
+
+    <!-- This is a test comment from _Host.cshtml -->
+
     <script>
         window.ScrollToBottom = (elementName) => {
             element = document.getElementById(elementName);
@@ -69,5 +66,16 @@
     </script>
 
     <script src="_framework/blazor.server.js"></script>
+    <script src="_content/BootstrapBlazor/bootstrap.blazor.bundle.min.js"></script>
+
+@*     <script>
+        Blazor.start().then(() => {
+            var appElement = document.getElementById('app');
+            if (appElement) {
+                appElement.remove();
+            }
+        });
+    </script>
+ *@
 </body>
 </html>

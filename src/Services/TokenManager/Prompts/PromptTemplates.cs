@@ -1,4 +1,4 @@
-﻿namespace TokenManager.Prompts
+﻿namespace TokenManagementService.Prompts
 {
     internal static class PromptTemplates
     {

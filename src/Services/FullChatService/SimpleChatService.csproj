@@ -14,7 +14,7 @@
 
   <ItemGroup>
 	<ProjectReference Include="..\..\Shared\Shared.csproj" />
-	<ProjectReference Include="..\TokenManager\TokenManager.csproj" />
+	<ProjectReference Include="..\TokenManager\TokenManagementService.csproj" />
   </ItemGroup>
 
 </Project>

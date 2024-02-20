@@ -1,5 +1,109 @@
 ﻿@inherits LayoutComponentBase
 
+<style>
+    .page {
+        display: flex;
+    }
+
+    .sidebar {
+        width: 200px;
+        background-color: #2C0DC0;
+        height: 100vh;
+        position: fixed;
+    }
+
+    .content {
+        margin-left: 0px;
+    }
+
+    .main {
+        padding: 0;
+        margin: 0;
+    }
+
+    .content {
+        padding: 0;
+        margin: 0;
+    }
+    
+    #top-content-div {
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+    }
+
+</style>
+
+<div class="page" style="overflow:hidden;">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main class="content px-4">
+        @* <div id="top-content-div" style="height: 65px; background-color: #2C0DC0;margin-bottom:25px;"></div> *@
+        @Body
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+
+
+@* @inherits LayoutComponentBase
+
+<style>
+    .page {
+        display: flex;
+    }
+
+    .sidebar {
+        width: 200px;
+    }
+
+    .top-row {
+        width: 200px;
+        height: 100%;
+    }
+
+    .content {
+        flex: 1;
+        padding-left: 200px;
+    }
+</style>
+
+<div class="page">
+    <div class="sidebar">
+       
+    </div>
+
+    <main>
+        <div class="top-row px-4" style="background-color: #2C0DC0;">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+ *@
+
+
+
+
+
+@* 
+@inherits LayoutComponentBase
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -21,3 +125,4 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+ *@
