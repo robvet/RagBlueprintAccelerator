@@ -146,15 +146,7 @@
         margin-left: -1.5rem;
         margin-right: -1.5rem;
     }
-
-    .modal-title {
-        text-align: center;
-    }
-
-    fieldset {
-            border: 1px solid #000 !important;
-            color: black;
-    }
+}
 </style>
 
 <script>
@@ -179,7 +171,6 @@
 <div id="top-content-div" style="height: 65px; background-color: #2C0DC0;margin-bottom:25px; display: flex; justify-content: flex-end; align-items: center;">
     <img src="images/settings9.png" alt="Image" style="vertical-align: middle; max-height: 70%; margin-right: 0.5in;" @onclick="OnShowModalClick">
 </div>
-
 
 @* <div class="h-90 mh-100 d-flex flex-column overflow-hidden justify-content-start"> *@
 <div class="d-flex flex-column justify-content-between" style="height: 91vh;">
@@ -242,10 +233,8 @@
     @if (Processing)
     {
         <br>
-
-        <div style="display: flex; align-items: center;">
-            <h3>Processing</h3>
-            <div class="spinner-border text-danger" style="margin-left:20px;"></div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <img src="images/processing.gif" alt="Processing..." style="transform: scale(0.60);" />
         </div>
     }
 
@@ -348,51 +337,73 @@
     
 </div>
 
-  <!-- Modal dialog for system information -->
-    @* <Modal Backdrop="false" CloseMethod="ModalCloseMethod.None" @ref="modal" title="Configure Answers" IsScrollable="true" class="text-center"> *@
-        <Modal UseStaticBackdrop="true" CloseOnEscape="false" @ref="modal" title="Completion Configuration">
-            <BodyTemplate>
 
+
+
+
+  <!-- Modal dialog for system information; have to use '\u00A' as hidden spaces to center title because bootstrap doesn't support a simple text-align center -->
+<Modal Backdrop="false" CloseMethod="ModalCloseMethod.None" @ref="modal" title="@("\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Configure Completion Options")" IsScrollable="true" class="text-center">
+            <BodyTemplate>
                 <div style="text-align: center;">
                     <div style="display: inline-flex; align-items: center;">
-                        <label style="display: inline-block; margin-right: 10px;">Search Indexing:</label>
+                        <label style="display: inline-block; margin-right: 10px;">Search Index Type:</label>
                         <FluentRadioGroup @bind-Value="searchIndex" Name="best-pilot" style="display: inline-block;">
-                            <FluentRadio Value="@("hybrid")" style="font-size: small;">Hybrid</FluentRadio>
+                            <FluentRadio Value="@("hybrid")" style="font-size: small;" title="Hybrid Label">Hybrid</FluentRadio>
                             <FluentRadio Value="@("text")" style="font-size: small;">Text</FluentRadio>
                             <FluentRadio Value="@("vector")" style="font-size: small;">Vector</FluentRadio>
                         </FluentRadioGroup>
                     </div>
                 </div>
 
-                <div style="text-align: center; border: thick; margin-top:20px;">
+                <div style="text-align: center; border: thick; margin-top:25px;">
                     <div style="display: inline-flex; justify-content: center; width: 100%;">
                         <FluentStack>
                             <FluentCheckbox @bind-Value="useSemanticRanker" Label="Use Semantic Ranker for Retrieval" style="margin: 0 auto;" />
                         </FluentStack>
+                        <FluentTooltip Anchor="useSemanticRanker" Position=TooltipPosition.Right>Number of unstructured documents to return for a search</FluentTooltip>
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top:20px;">
+                <div style="text-align: center; margin-top:25px;">
                     <label>Override System Prompt</label>
                     <div style="display: inline-flex; justify-content: center; width: 100%;">
-                        <textarea @bind="systemPrompt" rows="8" style="margin: 0 25px; overflow-y: auto; font-size: 0.9em; border: 1px solid black;">
-                        </textarea>
+                <FluentTextArea @bind-Value=systemPrompt Resize="TextAreaResize.Both" Rows="8" Cols="100" style="background-color:#d3d3d3; font-size: 0.9em; border: 1px solid black;"></FluentTextArea>
+                        <FluentTooltip Anchor="systemPrompt" Position=TooltipPosition.Right>Change or evolve the system prompt</FluentTooltip>
                     </div>
                 </div>
 
                 <div style="text-align: center; margin-top:20px;">
                     <div style="display: flex; align-items: center; justify-content: center;">
-                        <label>Results to Return:</label>
+                        <label>Document Results to Return:</label>
                         <div style="text-align: center; margin-left: 10px;">
-                            <FluentNumberField Id="maxtoken" @bind-Value=documentNumber Min="1" Max="10" Step="1" Size="1" Placeholder="Results to return" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
-                            <FluentTooltip Anchor="maxtoken" Position=TooltipPosition.Left>Specifies the maximum number of tokens (words/phrases) that can be generated by the model. Helps manage computational cost and language model operatal aspects, providing timely responses.</FluentTooltip>
+                            <FluentNumberField Id="documentNumber" @bind-Value=documentNumber Min="1" Max="10" Step="1" Size="1" Placeholder="Results to return" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                            <FluentTooltip Anchor="documentNumber" Position=TooltipPosition.Right>Number of unstructured documents to return for a search</FluentTooltip>
                         </div>
                     </div>
                 </div>
 
+               <div style="text-align: center; margin-top:20px;">
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <label>Maximun Tokens:</label>
+                        <div style="text-align: center">
+                            <FluentNumberField Id="maxtoken" @bind-Value=tokenLimit Min="100" Max="4000" Step="100" Size="1" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                            <FluentTooltip Anchor="maxtoken" Position=TooltipPosition.Right>Maximum number of tokens (words/phrases) that the model will generate per request</FluentTooltip>
+                        </div>
+                    </div>
+               </div>
 
-                <div style="text-align: center; margin-top:20px;">
-                    <label>Temperature</label>
+@*             <div style="text-align: center; margin-top:20px;">
+                  <div style="display: flex; align-items: center; justify-content: center;">
+                      <label>Seed Value:</label>
+                      <div style="text-align: center; margin-left: 10px;">
+                        <FluentNumberField Id="maxtoken" @bind-Value=seedValue Min="1" Max="2,147,483,640" Step="1" Size="1" Placeholder="Results to return" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                          <FluentTooltip Anchor="maxtoken" Position=TooltipPosition.Right>Integer value that </FluentTooltip>
+                      </div>
+                  </div>
+              </div>
+ *@
+                <div style="text-align: center; margin-top:30px;">
+                    <label style="margin-bottom:10px;">Temperature (Response Creativity)</label>
                     <div style="display: inline-flex; justify-content: center; width: 100%;">
                         <FluentSlider Min="0.0" Id="temperature" Max="2.0" Step="0.1" Required=false @bind-Value=temperature Style="color: black; background-color: #d3d3d3">
                             <FluentSliderLabel Position="0.0">0.0</FluentSliderLabel>
@@ -401,13 +412,30 @@
                             <FluentSliderLabel Position="1.5">1.5</FluentSliderLabel>
                             <FluentSliderLabel Position="2.0">2.0</FluentSliderLabel>
                         </FluentSlider>
-                        <FluentTooltip Anchor="temperature" Style="background-color:#f4d5a6" Position=TooltipPosition.Right>Temperature is a parameter that controls the “creativity” or randomness of the text generated by the GPT Model</FluentTooltip>
+                        <FluentTooltip Anchor="temperature" Position=TooltipPosition.Right>0.0 for predictable, 1.0 for balanced, above 1.0 for choice of words</FluentTooltip>
                     </div>
                 </div>
 
+
+            <div style="text-align: center; margin-top:35px;">
+            <label style="margin-bottom:10px;">Nucleus(Response Focu)</label>
+                
+                <div>
+                <FluentSlider Min="0.0" Id="nucleus" Max="1.0" Step="0.05" Required=false @bind-Value=nucleus Style="color: black; background-color: #d3d3d3">
+                        <FluentSliderLabel Position="0.0">0.0</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.2">0.2</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.4">0.3</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.6">0.6</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.8">0.8</FluentSliderLabel>
+                        <FluentSliderLabel Position="1.0">1.0</FluentSliderLabel>
+                    </FluentSlider>
+                    <FluentTooltip Anchor="nucleus" Position=TooltipPosition.Right>0.0 for predictable to 1.0 for varied responses, for most probable words</FluentTooltip>
+                </div>
+        </div>
+
             </BodyTemplate>
             <FooterTemplate>
-                <Button Color="ButtonColor.Secondary" @onclick="OnHideModalClick">Close</Button>
+                <Button Color="ButtonColor.Primary" @onclick="OnHideModalClick"   >Close</Button>
             </FooterTemplate>
         </Modal>
 
@@ -452,7 +480,9 @@
     private Modal modal = default!;
     private double temperature = 0.3;
     private double nucleus = 0.5;
-    private string systemPrompt = "";
+    private string systemPrompt = "You are a 'Knowledge Companion,' your go-to source for insights and answers. I'm here to sift through the vast ocean of information to bring you exactly what you need, when you need it.";
+    private int seedValue = 0;
+    private string fingerPrint = "";
     // Number of documents to retrieve
     int documentNumber = 3;
     // searchIndex type
