@@ -4,6 +4,6 @@ namespace Shared.Contracts
 {
     public interface IDataExtractionCompletion
     {
-        Task<Completion> ChatCompletionAsync(EZCompletionOptions ezCompletionOptions);
+        Task<Completion> ChatCompletionAsync(CompletionOverrides ezCompletionOptions);
     }
 }

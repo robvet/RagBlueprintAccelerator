@@ -4,6 +4,9 @@ using RagBlueprintAccelerator.Client;
 using RagBlueprintAccelerator.Client.Contracts;
 using RagBlueprintAccelerator.Client.Services;
 using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.DependencyInjection;
+
+//using Microsoft.FluentUI.AspNetCore.Components.Components;
 
 
 
@@ -53,6 +56,7 @@ builder.Services.AddSingleton(sp => new HttpClient
 
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddSingleton<Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration>();
+//builder.Services.AddFluentUIComponents();
 
 //builder.Services.AddHttpClient<POCService>(client =>
 //{

@@ -5,6 +5,6 @@ namespace Shared.Contracts
 {
     public interface ISimpleChatCompletion
     {
-        Task<Completion> ChatCompletionAsync(EZCompletionOptions ezCompletionOptions);
+        Task<Completion> ChatCompletionAsync(CompletionOverrides ezCompletionOptions);
     }
 }

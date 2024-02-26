@@ -4,9 +4,9 @@ using System.ComponentModel;
 
 namespace Shared.Models
 {
-    public class EZCompletionOptions
+    public class CompletionOverrides
     {
-        public EZCompletionOptions()
+        public CompletionOverrides()
         {
             StopSequences = new string[] { "\n" };
             ChatMessages = new List<ChatMessage>();

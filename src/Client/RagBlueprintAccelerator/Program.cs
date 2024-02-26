@@ -50,6 +50,9 @@ builder.Services.AddSingleton<ITokenManager, SlidingWindowWithDecay>();
 // Engage plumbing for IConfiguration and user secrets
 IConfiguration configuration = builder.Configuration;
 
+builder.Services.AddSingleton<Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration>();
+//builder.Services.AddFluentUIComponents();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

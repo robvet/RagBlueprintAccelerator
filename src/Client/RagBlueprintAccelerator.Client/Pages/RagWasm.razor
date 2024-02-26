@@ -12,7 +12,9 @@
 @using Shared.Models;
 @using RagBlueprintAccelerator.Client.Contracts;
 @using BlazorBootstrap;
-@using Microsoft.FluentUI.AspNetCore.Components
+@using Microsoft.FluentUI.AspNetCore.Components;
+@using System.ComponentModel.DataAnnotations;
+@using Microsoft.FluentUI.AspNetCore.Components;
 
 @inject IChatService _chatService
 @inject IConfiguration _configuration
@@ -169,7 +171,7 @@
 </script>
 
 <div id="top-content-div" style="height: 65px; background-color: #2C0DC0;margin-bottom:25px; display: flex; justify-content: flex-end; align-items: center;">
-    <img src="images/settings9.png" alt="Image" style="vertical-align: middle; max-height: 70%; margin-right: 0.5in;" @onclick="OnShowModalClick">
+    <img src="images/settings9.png" title="Configure Completion Options" alt="Image" style="vertical-align: middle; max-height: 70%; margin-right: 0.5in;" @onclick="OnShowModalClick">
 </div>
 
 @* <div class="h-90 mh-100 d-flex flex-column overflow-hidden justify-content-start"> *@
@@ -342,13 +344,13 @@
 
 
   <!-- Modal dialog for system information; have to use '\u00A' as hidden spaces to center title because bootstrap doesn't support a simple text-align center -->
-<Modal Backdrop="false" CloseMethod="ModalCloseMethod.None" @ref="modal" title="@("\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Configure Completion Options")" IsScrollable="true" class="text-center">
+<Modal Backdrop="false" CloseMethod="ModalCloseMethod.None" UseStaticBackdrop="true" @ref="modal" title="@("\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Configure Completion Options")" IsScrollable="false">
             <BodyTemplate>
                 <div style="text-align: center;">
                     <div style="display: inline-flex; align-items: center;">
                         <label style="display: inline-block; margin-right: 10px;">Search Index Type:</label>
                         <FluentRadioGroup @bind-Value="searchIndex" Name="best-pilot" style="display: inline-block;">
-                            <FluentRadio Value="@("hybrid")" style="font-size: small;" title="Hybrid Label">Hybrid</FluentRadio>
+                            <FluentRadio Value="@("hybrid")" style="font-size: small;" title="Combines the Vector and Keyword Searches">Hybrid</FluentRadio>
                             <FluentRadio Value="@("text")" style="font-size: small;">Text</FluentRadio>
                             <FluentRadio Value="@("vector")" style="font-size: small;">Vector</FluentRadio>
                         </FluentRadioGroup>
@@ -357,17 +359,26 @@
 
                 <div style="text-align: center; border: thick; margin-top:25px;">
                     <div style="display: inline-flex; justify-content: center; width: 100%;">
-                        <FluentStack>
+@*                         <FluentStack>
                             <FluentCheckbox @bind-Value="useSemanticRanker" Label="Use Semantic Ranker for Retrieval" style="margin: 0 auto;" />
                         </FluentStack>
-                        <FluentTooltip Anchor="useSemanticRanker" Position=TooltipPosition.Right>Number of unstructured documents to return for a search</FluentTooltip>
+ *@                       
+                        <FluentSwitch @bind-Value=useSemanticRanker Label="Enable Semantic Ranker to enhance search" />
+                        <FluentTooltip Anchor="useSemanticRanker" Position=TooltipPosition.Right>Use the Semantic Ranker to improve the search quality</FluentTooltip>
+                    </div>
+                </div>
+
+                <div style="text-align: center; border: thick; margin-top:25px;">
+                    <div style="display: inline-flex; justify-content: center; width: 100%;">
+                        <FluentSwitch @bind-Value=enableSuggestions Label="Enable Follow-Up Suggestions" />
+                        <FluentTooltip Anchor="enableSuggestions" Position=TooltipPosition.Right>Return follow-up suggestions for each answer</FluentTooltip>
                     </div>
                 </div>
 
                 <div style="text-align: center; margin-top:25px;">
                     <label>Override System Prompt</label>
                     <div style="display: inline-flex; justify-content: center; width: 100%;">
-                <FluentTextArea @bind-Value=systemPrompt Resize="TextAreaResize.Both" Rows="8" Cols="100" style="background-color:#d3d3d3; font-size: 0.9em; border: 1px solid black;"></FluentTextArea>
+                        <FluentTextArea @bind-Value=systemPrompt Resize="TextAreaResize.Both" Rows="8" Cols="100" style="background-color:#d3d3d3; font-size: 0.9em; border: 1px solid black;"></FluentTextArea>
                         <FluentTooltip Anchor="systemPrompt" Position=TooltipPosition.Right>Change or evolve the system prompt</FluentTooltip>
                     </div>
                 </div>
@@ -439,6 +450,8 @@
             </FooterTemplate>
         </Modal>
 
+
+
 @code {
     // static List<ChatMessage> chatMessages = new List<ChatMessage>();
     // static string[] suggestions;
@@ -489,6 +502,7 @@
     string? searchIndex = "hybrid";
     // Use Semantic Ranker
     bool useSemanticRanker = false;
+    bool enableSuggestions = true;
 
     
     // backing var for numeric spinner
@@ -653,7 +667,7 @@
             // Add the new message to chatMessages
             chatMessages.Add(new ChatMessage(Role.User, prompt, 0));
 
-            var ezCompletionOptions = new EZCompletionOptions()
+            var ezCompletionOptions = new CompletionOverrides()
                 {
                     Temperature = (float)0.7,
                     MaxTokens = 2000,

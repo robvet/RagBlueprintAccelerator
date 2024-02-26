@@ -24,7 +24,7 @@ namespace RagBlueprintAccelerator.Client.Services
         //    }
         //}
 
-        public async Task<Completion> PostChatCompletion(EZCompletionOptions completionOptions)
+        public async Task<Completion> PostChatCompletion(CompletionOverrides completionOptions)
         {
             try
             {

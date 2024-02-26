@@ -30,7 +30,7 @@ namespace SimpleChatService.Services
         }
 
         //public async Task<(ChatCompletions response, ChatCompletions followup, int promptTokens, int completionTokens, int suggestionTokens)> ChatCompletionAsync(EZCompletionOptions ezCompletionOptions)
-        public async Task<Completion> ChatCompletionAsync(EZCompletionOptions ezCompletionOptions)
+        public async Task<Completion> ChatCompletionAsync(CompletionOverrides ezCompletionOptions)
         {
             try
             {
