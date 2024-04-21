@@ -22,7 +22,7 @@
 
 <style>
     textarea {
-        border: 2px dashed #888; */
+        border: 2px dashed #888; 
         border-radius: 10px;
         width: 80%;
         overflow: auto;
@@ -397,7 +397,6 @@
     protected override void OnInitialized()
     {
         // chatMessages.Add(new ChatMessage(ChatRole.System, systemPrompt));
-        var message = "";
     }
 
     protected override async Task
@@ -480,7 +479,7 @@
             // Add the new message to chatMessages
             chatMessages.Add(new ChatMessage(Role.User, prompt, 0));
 
-            var ezCompletionOptions = new EZCompletionOptions()
+            var ezCompletionOptions = new CompletionOverrides()
                 {
                     Temperature = (float)0.7,
                     MaxTokens = 2000,

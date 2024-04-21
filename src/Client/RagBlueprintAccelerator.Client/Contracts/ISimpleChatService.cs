@@ -5,6 +5,6 @@ namespace RagBlueprintAccelerator.Client.Contracts
 {
     public interface ISimpleChatService
     {
-        Task<Completion> PostChatCompletion(EZCompletionOptions completionOptions);
+        Task<Completion> PostChatCompletion(CompletionOverrides completionOptions);
     }
 }

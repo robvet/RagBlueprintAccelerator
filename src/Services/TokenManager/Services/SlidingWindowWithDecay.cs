@@ -1,14 +1,14 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
-using Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Shared.Configuration;
+using Shared.Contracts;
 using Shared.Enums;
 using Shared.Models;
-using TokenManager.Prompts;
+using TokenManagementService.Prompts;
 
-namespace TokenManager.Services
+namespace TokenManagementService.Services
 {
     public class SlidingWindowWithDecay : ITokenManager
     {
@@ -31,7 +31,7 @@ namespace TokenManager.Services
         {
             _logger = logger;
             _configuration = configuration;
-            
+
             // Get the Azure OpenAI Service configuration values
             _endpoint = _configuration["AzureOpenAIServiceOptions_Endpoint"] ?? throw new ArgumentException("AzureOpenAIServiceOptions_Endpoint is Missing");
             _deploymentOrModelName4 = _configuration["AzureOpenAIServiceOptions_DeploymentOrModelName"] ?? throw new ArgumentException("AzureOpenAIServiceOptions_DeploymentOrModelName is Missing");
@@ -53,14 +53,14 @@ namespace TokenManager.Services
                 // for the prompt and chathistory for a typical chatturn.
                 // Once maxTokens exceeds the limit, the LLM will not return further responses.
                 var maxInputTokens = CompletionOptions.AverageInputTokens;
-                
+
                 // Represents the maximum size of chat history that will be used
                 int historyMax = (int)(maxInputTokens * .6F);
                 // Represents the maximum size of summaried chat history that will be used
-                int summaryMax = (int) (maxInputTokens * .4F);
+                int summaryMax = (int)(maxInputTokens * .4F);
 
                 string assistantOverflowContext = string.Empty;
-                string userOverflowContext = string.Empty; 
+                string userOverflowContext = string.Empty;
 
                 int tokensUsed = 0;
 
@@ -95,7 +95,7 @@ namespace TokenManager.Services
                         else if (fullChatHistory[i].Role == Role.User)
                         {
                             userOverflowContext += fullChatHistory[i].Content + Environment.NewLine + Environment.NewLine;
-                        }   
+                        }
                     }
                 }
 

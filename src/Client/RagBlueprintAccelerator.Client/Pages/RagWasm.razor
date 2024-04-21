@@ -1,0 +1,923 @@
+﻿@page "/"
+
+
+
+@rendermode InteractiveAuto
+@* @rendermode @(new InteractiveAutoRenderMode(prerender: false)) *@
+@* @attribute [StreamRendering(true)] *@
+
+@using Azure.AI.OpenAI;
+@using Azure;
+@using Markdig;
+@using Humanizer;
+@using Shared.Enums
+@using Shared.Models;
+@using RagBlueprintAccelerator.Client.Contracts;
+@using BlazorBootstrap;
+@using Microsoft.FluentUI.AspNetCore.Components;
+@using System.ComponentModel.DataAnnotations;
+
+@inject IChatService _chatService
+@inject IConfiguration _configuration
+@* @inject Contracts.IChatCompletion ChatCompletion *@
+@inject IJSRuntime _jsRuntime
+
+<PageTitle>ChatBot</PageTitle>
+
+<style>
+    textarea {
+        border: 2px dashed #888; 
+        border-radius: 10px;
+        width: 80%;
+        overflow: auto;
+        background: #f7f7f7;
+    }
+
+    /* improved CSS for speech bubbles */
+
+    .Assistant, .User {
+        position: relative;
+        font-family: arial;
+        font-size: 1.1em;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .Assistant:after, .User:after {
+        content: '';
+        border: 20px solid transparent;
+        position: absolute;
+        margin-top: -30px;
+    }
+
+    .User {
+        background: #03a9f4;
+        color: #fff;
+        margin-left: 20%;
+        margin-right: 100px;
+        top: 30%;
+        text-align: right;
+    }
+
+    .Assistant {
+        background: #4CAF50;
+        color: #fff;
+        margin-left: 100px;
+        margin-right: 20%;
+    }
+
+    .User:after {
+        border-left-color: #03a9f4;
+        border-right: 0;
+        right: -20px;
+    }
+
+    .Assistant:after {
+        border-right-color: #4CAF50;
+        border-left: 0;
+        left: -20px;
+    }
+
+    .msg {
+        font-size: medium;
+    }
+
+    .bg-red {
+        background-color: #bf0000; /* Dark Red */
+    }
+
+    .bg-dark-gray {
+        background-color: darkgray;
+    }
+
+    .bg-gray {
+        background-color: gray;
+    }
+
+    .bg-light-gray {
+        background-color: lightgray;
+    }
+    div.token-count {
+        background-color: #d6d6d6;
+        border: 1px solid black;
+        padding: 10px;
+        height: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-pill {
+        border: 1px solid black;
+        background-color: lightgray;
+    }
+
+    div.wrapper {
+        position: relative;
+        border: 2px solid #1b6ec2; /* cornflowerblue; */
+        margin-top: 20px;
+        padding: 20px 10px 10px;
+    }
+
+    div.wrapper label {
+        color: white;
+        line-height: 20px;
+        padding: 0 5px;
+        position: absolute;
+        background-color: #1b6ec2;
+        /*  cornflowerblue; */
+        /* Adjust these values to posiytion the title or label */
+        top: -10px;
+        left: 10px;
+    }
+
+    .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #f3f3f3; /* Light gray border */
+        border-top: 8px solid #3498db; /* Blue top border */
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+
+    #top-content-div {
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+    }
+}
+</style>
+
+<script>
+    window.ScrollToBottom = (elementName) => {
+        element = document.getElementById(elementName);
+        element.scrollTop = element.scrollHeight - element.clientHeight;
+    }
+
+    function disableSubmitButton(buttonId, action) {
+        var button = document.getElementById(buttonId);
+        if (button) {
+            button.disabled = (action === "disable");
+        }
+    }
+
+    function applyBlur(elementName, blurAmount) {
+        element = document.getElementById(elementName);
+        element.style.filter = "blur(" + blurAmount + ")";
+    }
+</script>
+
+<div id="top-content-div" style="height: 50px; background-color: #F7F7F7;margin-bottom:25px; display: flex; justify-content: flex-end; align-items: center;">
+    <img src="images/settings9.png" title="Configure Completion Options" alt="Image" style="vertical-align: middle; max-height: 70%; margin-right: 0.5in;" @onclick="OnShowModalClick">
+</div>
+
+@* <div class="h-90 mh-100 d-flex flex-column overflow-hidden justify-content-start"> *@
+<div class="d-flex flex-column justify-content-between" style="height: 91vh;">
+@* <div class="h-100 d-flex flex-column overflow-hidden justify-content-start"> *@
+
+    <!-- Header and Token Count -->
+    <div style="display: flex; justify-content: space-between;align-items: center;">
+        <div id="name">
+            <h3>ChatBot</h3>
+        </div>
+        @if (chatMessages.Count > 1)
+        {
+            <div style="padding: 10px; height: 15px; display: flex; align-items: center; justify-content: center;">
+                <span class="me-2 badge rounded-pill bg-light custom-pill" style="color: black;">
+                    Conversation Tokens: @TotalConversationTokens
+                </span>
+                &nbsp;&nbsp;&nbsp;
+                <span class="me-2 badge rounded-pill bg-light custom-pill" style="color: black;">
+                    Suggestion Tokens: @TotalSuggestionTokens
+                </span>
+                &nbsp;&nbsp;&nbsp;
+                <span class="me-2 badge rounded-pill bg-light custom-pill" style="color: black;">
+                    Total Tokens: @TotalTokens
+                </span>
+            </div>
+        }
+    </div>
+
+    <!-- Suggestions -->
+    <div>
+        @if (suggestions?.Length > 0)
+        {
+            <div class="toast fade show w-100 rounded-3" style="margin-bottom: 25px;">
+
+                <div class="toast fade show w-100 rounded-3">
+
+                    <div class="toast-header @("bg-red text-white")">
+                        <i class="bi @("bi-lightbulb") me-1" aria-hidden="true"></i>
+                        <strong class="me-auto text-capitalize">
+                            Suggestions
+                        </strong>
+                        <span class="me-2 badge rounded-pill bg-light" style="color: black;">
+                            Tokens: @SuggestionTokens
+                        </span>
+                    </div>
+                    <div class="toast-body" style="display: flex; flex-direction: row; justify-content: center;">
+
+                        @foreach (var suggestion in suggestions)
+                        {
+                            <div style="background-color: #d6d6d6; border: 1px solid black; border-radius: 10px; padding: 10px; margin: 5px;text-align: center;">
+                                <a href="/" @onclick:preventDefault="true" @onclick="() => AssignToPromptTextArea(suggestion)" style="font-family: arial !important; font-size: 0.9em !important;">@suggestion</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Processing)
+    {
+        <br>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <img src="images/processing.gif" alt="Processing..." style="transform: scale(0.60);" />
+        </div>
+    }
+
+    <!-- ChatTurns -->
+       <div id="chatcontainer" style="height:70vh; overflow: auto;">
+        <!-- New Code ChatTurn Code -->
+        <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch;" style="margin-bottom: 30px;">
+
+            @if (!Processing)
+            {
+                @foreach (var msg in chatMessages)
+
+                {
+                    @* <div class="toast fade show w-75 rounded-3 @(msg.Role == Role.Assistant ? "align-self-end" : "align-self-start")"> *@
+                    <div class="toast fade show w-75 rounded-3 @(msg.Role == Role.Assistant ? "align-self-start" : "align-self-end")">
+                        <div class="toast-header @(msg.Role == Role.Assistant ? "bg-success text-white" : "bg-primary text-light")">
+                            <i class="bi @(msg.Role == Role.Assistant ? "bi-robot" : "bi-person") me-1" aria-hidden="true"></i>
+                            <strong class="me-auto text-capitalize">
+                                @msg.Role
+                            </strong>
+                            @if (msg.Tokens > 0)
+                            {
+                                <span class="me-2 badge rounded-pill bg-light" style="color: black;">
+                                    Tokens: @msg.Tokens
+                                </span>
+                            }
+                            <small>
+                                @msg.TimeStamp.Humanize()
+                            </small>
+                        </div>
+                        <div class="toast-body">
+                            <i class="bi bi-grip-vertical mr-2 text-black-50"></i>
+                            @{
+                                MarkupString html = new MarkupString(@msg.Content);
+                            }
+                            @html
+
+
+
+                         @*    @if (suggestions?.Length > 0)
+                            {
+                                  
+                                        <div class="toast-body" style="display: flex; flex-direction: row; justify-content: center;">
+
+                                            @foreach (var suggestion in suggestions)
+                                            {
+                                                <div style="background-color: #d6d6d6; border: 1px solid black; border-radius: 10px; padding: 10px; margin: 5px;text-align: center;">
+                                                    <a href="/" @onclick:preventDefault="true" @onclick="() => AssignToPromptTextArea(suggestion)" style="font-family: arial !important; font-size: 0.9em !important;">@suggestion</a>
+                                                </div>
+                                            }
+                                        </div>
+                                  
+                            } *@
+
+
+
+
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    @if (@ErrorMessage != "")
+    {
+        <div class="alert alert-danger" role="alert" style="color:red; font-size: large; text-align:center;">
+            @ErrorMessage
+        </div>
+    }
+
+ 
+    <!-- Prompt Input-->
+    <div class="@("bg-light-gray text-white") text-light px-4 py-3 rounded-top-5 text-dark d-flex flex-column justify-content-center" style="margin-top:20px;">
+        <div class="input-group d-flex">
+                <i class="bi bi-chat-left-text input-group-text" aria-hidden="true"></i>
+                <textarea id="text-area-prompt" rows="3" class="form-control form-control-sm" @bind="prompt" title="Enter your prompt here" style="flex-grow: 1;" />
+                <button type="button" class="btn btn-outline-secondary" @onclick="PreCallChatGPT" style="background-color: #f0f0f0;">
+                    <i class="bi bi-send-fill" aria-hidden="true" style="background-color: #f0f0f0;" title="Ask AI..."></i>
+                </button>
+                &nbsp;
+                <button type="button" class="btn btn-new-chat" @onclick="RestartChatGPT" style="background-color: #f0f0f0;">
+                <i class="bi bi-arrow-clockwise" aria-hidden="true" style="background-color: #f0f0f0;" title="Start New Chat Session..."></i>
+                </button>
+
+
+            @* <button type="button" class="btn btn-primary" @onclick="OnShowModalClick">Show Modal</button> *@
+        </div>
+    </div>
+    
+</div>
+
+
+
+
+
+  <!-- Modal dialog for system information; have to use '\u00A' as hidden spaces to center title because bootstrap doesn't support a simple text-align center -->
+<Modal Backdrop="false" CloseMethod="ModalCloseMethod.None" UseStaticBackdrop="true" @ref="modal" title="@("\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0Configure Completion Options")" IsScrollable="false">
+            <BodyTemplate>
+                <div style="text-align: center;">
+                    <div style="display: inline-flex; align-items: center;">
+                        <label style="display: inline-block; margin-right: 10px;">Search Index Type:</label>
+                        <FluentRadioGroup @bind-Value="searchIndex" Name="best-pilot" style="display: inline-block;">
+                            <FluentRadio Value="@("hybrid")" style="font-size: small;" title="Combines the Vector and Keyword Searches">Hybrid</FluentRadio>
+                            <FluentRadio Value="@("text")" style="font-size: small;">Text</FluentRadio>
+                            <FluentRadio Value="@("vector")" style="font-size: small;">Vector</FluentRadio>
+                        </FluentRadioGroup>
+                    </div>
+                </div>
+
+                <div style="text-align: center; border: thick; margin-top:25px;">
+                    <div style="display: inline-flex; justify-content: center; width: 100%;">
+@*                         <FluentStack>
+                            <FluentCheckbox @bind-Value="useSemanticRanker" Label="Use Semantic Ranker for Retrieval" style="margin: 0 auto;" />
+                        </FluentStack>
+ *@                       
+                        <FluentSwitch @bind-Value=useSemanticRanker Label="Enable Semantic Ranker to enhance search" />
+                        <FluentTooltip Anchor="useSemanticRanker" Position=TooltipPosition.Right>Use the Semantic Ranker to improve the search quality</FluentTooltip>
+                    </div>
+                </div>
+
+                <div style="text-align: center; border: thick; margin-top:25px;">
+                    <div style="display: inline-flex; justify-content: center; width: 100%;">
+                        <FluentSwitch @bind-Value=enableSuggestions Label="Enable Follow-Up Suggestions" />
+                        <FluentTooltip Anchor="enableSuggestions" Position=TooltipPosition.Right>Return follow-up suggestions for each answer</FluentTooltip>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top:25px;">
+                    <label>Override System Prompt</label>
+                    <div style="display: inline-flex; justify-content: center; width: 100%;">
+                        <FluentTextArea @bind-Value=systemPrompt Resize="TextAreaResize.Both" Rows="8" Cols="100" style="background-color:#d3d3d3; font-size: 0.9em; border: 1px solid black;"></FluentTextArea>
+                        <FluentTooltip Anchor="systemPrompt" Position=TooltipPosition.Right>Change or evolve the system prompt</FluentTooltip>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top:20px;">
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <label>Document Results to Return:</label>
+                        <div style="text-align: center; margin-left: 10px;">
+                            <FluentNumberField Id="documentNumber" @bind-Value=documentNumber Min="1" Max="10" Step="1" Size="1" Placeholder="Results to return" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                            <FluentTooltip Anchor="documentNumber" Position=TooltipPosition.Right>Number of unstructured documents to return for a search</FluentTooltip>
+                        </div>
+                    </div>
+                </div>
+
+               <div style="text-align: center; margin-top:20px;">
+                    <div style="display: flex; align-items: center; justify-content: center;">
+                        <label>Maximun Tokens:</label>
+                        <div style="text-align: center">
+                            <FluentNumberField Id="maxtoken" @bind-Value=tokenLimit Min="100" Max="4000" Step="100" Size="1" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                            <FluentTooltip Anchor="maxtoken" Position=TooltipPosition.Right>Maximum number of tokens (words/phrases) that the model will generate per request</FluentTooltip>
+                        </div>
+                    </div>
+               </div>
+
+@*             <div style="text-align: center; margin-top:20px;">
+                  <div style="display: flex; align-items: center; justify-content: center;">
+                      <label>Seed Value:</label>
+                      <div style="text-align: center; margin-left: 10px;">
+                        <FluentNumberField Id="maxtoken" @bind-Value=seedValue Min="1" Max="2,147,483,640" Step="1" Size="1" Placeholder="Results to return" Style="font-size: small; font-family: Helvetica Neue;"></FluentNumberField>
+                          <FluentTooltip Anchor="maxtoken" Position=TooltipPosition.Right>Integer value that </FluentTooltip>
+                      </div>
+                  </div>
+              </div>
+ *@
+                <div style="text-align: center; margin-top:30px;">
+                    <label style="margin-bottom:10px;">Temperature (Response Creativity)</label>
+                    <div style="display: inline-flex; justify-content: center; width: 100%;">
+                        <FluentSlider Min="0.0" Id="temperature" Max="2.0" Step="0.1" Required=false @bind-Value=temperature Style="color: black; background-color: #d3d3d3">
+                            <FluentSliderLabel Position="0.0">0.0</FluentSliderLabel>
+                            <FluentSliderLabel Position="0.5">0.5</FluentSliderLabel>
+                            <FluentSliderLabel Position="1.0">1.0</FluentSliderLabel>
+                            <FluentSliderLabel Position="1.5">1.5</FluentSliderLabel>
+                            <FluentSliderLabel Position="2.0">2.0</FluentSliderLabel>
+                        </FluentSlider>
+                        <FluentTooltip Anchor="temperature" Position=TooltipPosition.Right>0.0 for predictable, 1.0 for balanced, above 1.0 for choice of words</FluentTooltip>
+                    </div>
+                </div>
+
+
+            <div style="text-align: center; margin-top:35px;">
+            <label style="margin-bottom:10px;">Nucleus(Response Focu)</label>
+                
+                <div>
+                <FluentSlider Min="0.0" Id="nucleus" Max="1.0" Step="0.05" Required=false @bind-Value=nucleus Style="color: black; background-color: #d3d3d3">
+                        <FluentSliderLabel Position="0.0">0.0</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.2">0.2</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.4">0.3</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.6">0.6</FluentSliderLabel>
+                        <FluentSliderLabel Position="0.8">0.8</FluentSliderLabel>
+                        <FluentSliderLabel Position="1.0">1.0</FluentSliderLabel>
+                    </FluentSlider>
+                    <FluentTooltip Anchor="nucleus" Position=TooltipPosition.Right>0.0 for predictable to 1.0 for varied responses, for most probable words</FluentTooltip>
+                </div>
+        </div>
+
+            </BodyTemplate>
+            <FooterTemplate>
+                <Button Color="ButtonColor.Primary" @onclick="OnHideModalClick"   >Close</Button>
+            </FooterTemplate>
+        </Modal>
+
+
+
+@code {
+    // static List<ChatMessage> chatMessages = new List<ChatMessage>();
+    // static string[] suggestions;
+
+    List<ChatMessage> chatMessages = new List<ChatMessage>();
+    List<ChatMessage> chatHistory = new List<ChatMessage>();   
+
+    string[] suggestions;
+
+    private string prompt = "Write a 10 word description of Azure OpenAI";
+
+    private string ErrorMessage = "";
+    private bool Processing = false;
+
+    // static private int PromptTokens = 0;
+    // static private int ResponseTokens = 0;
+    // static private int SuggestionTokens = 0;
+
+    // static private int TotalTokens = 0;
+    // static private int TotalSuggestionTokens = 0;
+    // static private int TotalConversationTokens = 0;
+
+    private int PromptTokens = 0;
+    private int ResponseTokens = 0;
+    private int SuggestionTokens = 0;
+
+    private int TotalTokens = 0;
+    private int TotalSuggestionTokens = 0;
+    private int TotalConversationTokens = 0;
+
+    // Add a new boolean variable to control the rendering of the foreach loop
+    private string promptTextArea = "";
+
+
+
+    //**************************** Modal Dialog ********************************/
+
+    // Modal dialog for system information
+    private Modal modal = default!;
+    private double temperature = 0.3;
+    private double nucleus = 0.5;
+    private string systemPrompt = "You are a 'Knowledge Companion,' your go-to source for insights and answers. I'm here to sift through the vast ocean of information to bring you exactly what you need, when you need it.";
+    private int seedValue = 0;
+    private string fingerPrint = "";
+    // Number of documents to retrieve
+    int documentNumber = 3;
+    // searchIndex type
+    string? searchIndex = "hybrid";
+    // Use Semantic Ranker
+    bool useSemanticRanker = false;
+    bool enableSuggestions = true;
+
+    
+    // backing var for numeric spinner
+    int tokenLimit = 4000;
+
+    private async Task OnShowModalClick()
+    {
+        await modal.ShowAsync();
+    }
+
+    private async Task OnHideModalClick()
+    {
+        await modal.HideAsync();
+    }
+
+     
+
+    //*************************************************************************/
+
+    /// <summary>
+    /// Experimental:  Page Life Cycle Events to learn how Blazor works
+    /// </summary>
+    /// <param name="e"></param>
+    /// <returns></returns>
+
+    private string message = string.Empty;
+
+    // protected override void OnInitialized()
+    // {
+    //     message += " Initializing! ";
+    // }
+
+    protected override async Task OnInitializedAsync()
+    {
+        message += " OnOnInitializedAsync ";
+    }
+
+    protected override void OnParametersSet()
+    {
+        message += " OnParametersSet ";
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            message += " OnAfterRender-Access DOM elements now ";
+        }
+    }
+
+   
+
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     if (firstRender)
+    //     {
+    //         message += " OnAfterRender-Perform Async Operations After Rendering ";
+    //     }
+    // }
+
+    // protected override void OnEnter()
+    // {
+    //     message += " OnEnter ";
+    // }
+
+
+    // protected override void OnLeave()
+    // {
+    //     message += " OnLeave ";
+    // }
+
+
+    // End of experimental code
+
+
+
+
+
+
+    protected override void OnInitialized()
+    {
+        // chatMessages.Add(new ChatMessage(ChatRole.System, systemPrompt));
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Set RenderChatMessages to false to prevent the foreach loop from executing
+        //RenderChatMessages = false;
+
+        try
+        {
+            await _jsRuntime.InvokeAsync<string>(
+                "ScrollToBottom", "chatcontainer"
+            );
+        }
+        catch
+        {
+            // do nothing if this fails
+        }
+    }
+
+    public async Task Enter(KeyboardEventArgs e)
+
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await PreCallChatGPT();
+        }
+    }
+
+    private void UpdateButtonState()
+    {
+        // _jsRuntime.InvokeVoidAsync("document.getElementById('promtTextArea').addEventListener('input', function() {var btn-primary = document.getElementById('btn-primary'); if(this.value.trim() === '') {btn-primary.disabled = true;} else {btn-primary.disabled = false;  }});");
+        //_jsRuntime.InvokeVoidAsync("document.getElementById('promtTextArea').addEventListener('input', function() {var btnPrimary = document.getElementById('btn-primary'); if(this.value.trim() === '') {btnPrimary.disabled = true;console.log('Button is disabled'); } else {btnPrimary.disabled = false; console.log('Button isenabled'); }});");
+    }
+
+    private void ProcessingBehvaior()
+    {
+        // _jsRuntime.InvokeVoidAsync("applyBlur", "div-prompt-area", "25px");
+        _jsRuntime.InvokeVoidAsync("disableSubmitButton", "btn-submit", "disable");
+        _jsRuntime.InvokeVoidAsync("disableSubmitButton", "btn-info", "disable");
+    }
+
+    private void AssignToPromptTextArea(string suggestion)
+    {
+        // Assuming promptTextArea is the id of the textarea
+        // _jsRuntime.InvokeVoidAsync("document.getElementById('promptTextArea').value = '" + suggestion + "'");
+
+        prompt = suggestion;
+    }
+
+    protected async Task PreCallChatGPT()
+    {
+        if (!string.IsNullOrEmpty(prompt))
+        {
+            // Call your method here
+            await CallChatGPT();
+            return;
+
+        }
+        else
+        {
+            ErrorMessage = "Please ask me something!";
+            return;
+        }
+    }
+
+
+    private async Task CallChatGPT()
+    {
+        try
+        {
+            // Set Processing to true to flag method as processing
+            Processing = true;
+            
+            // Call StateHasChanged to refresh the UI
+            //StateHasChanged();
+
+            // Clear any previous error messages
+            ErrorMessage = "";
+
+            // Add the new message to chatMessages
+            chatMessages.Add(new ChatMessage(Role.User, prompt, 0));
+
+            var ezCompletionOptions = new CompletionOverrides()
+                {
+                    Temperature = (float)0.7,
+                    MaxTokens = 2000,
+                    //NucleusSamplingFactor = (float)0.95,
+                    FrequencyPenalty = 0,
+                    PresencePenalty = 0,
+                    UserPrompt = prompt,
+                    ChatMessages = chatMessages,
+                };
+
+
+            // Call OpenAI ChatBot Service to execute completion
+            var completion = await _chatService.PostChatCompletion(ezCompletionOptions);
+
+            // Parse Suggestions from the response
+            // suggestions = completion.Suggestions.Split(',');
+            suggestions = completion.Suggestions.Trim(new char[] { '[', ']', '"', '\'' }).Replace("\"", string.Empty).Split(',');// Trim(new char[] { '[', ']', '"', '\'' });
+
+
+            // Create a new Message object with the response and other details
+            // and add it to the messages list
+            var choice = completion.Response;
+
+            // Update the total number of tokens used by the API
+            PromptTokens = completion.PromptTokens;
+            ResponseTokens = completion.ResponseTokens;
+            SuggestionTokens = completion.SuggestionTokens;
+            TotalTokens += completion.SuggestionTokens + completion.ResponseTokens + completion.PromptTokens;
+            TotalSuggestionTokens += SuggestionTokens;
+            TotalConversationTokens += PromptTokens + ResponseTokens;
+
+            if (choice != null)            {
+
+                if (! string.IsNullOrEmpty(choice))
+                {
+                    chatMessages.Add(new ChatMessage(Role.Assistant, choice, ResponseTokens));
+                }
+            }
+
+            // Retrofit the number of prompt tokens used
+            // Go one message back to corresponding prompt and subtract 1 as zero-based index
+            var index = chatMessages.Count - 2; 
+            var promptMessage = chatMessages[index];
+            promptMessage.Tokens = PromptTokens;
+            chatMessages[index] = promptMessage;
+
+            // Grab the ChatHistory from the response
+            chatHistory = completion.ChatHistory;   
+        }
+        catch (Exception ex)
+        {
+            // Set ErrorMessage to the exception
+            // message if an error occurs
+            var buildErrorMessage = ex.Message;
+            ErrorMessage = ex.Message;
+
+            // Remove the last message from chatMessages
+            chatMessages.RemoveAt(chatMessages.Count - 1);
+        }
+        finally
+        {
+            // Clear the prompt variable
+            prompt = "";
+             
+            // Set Processing to false to indicate
+            // that the method is done processing
+            Processing = false;
+
+            // Call StateHasChanged to refresh the UI
+            //StateHasChanged();
+        }
+    }
+
+    private void RestartChatGPT()
+    {
+        prompt = "Write a 10 word description of Azure OpenAI";
+        // chatMessages = new List<ChatMessage>();
+        TotalTokens = 0;
+        PromptTokens = 0;
+        ResponseTokens = 0;
+        SuggestionTokens = 0;
+
+        chatMessages.Clear();
+        suggestions = new string[0];
+        Array.Clear(suggestions, 0, suggestions.Length);
+        
+        ErrorMessage = "";
+
+        StateHasChanged();
+    }
+
+
+
+
+
+
+
+    //*****************************************************************/
+    //** Code Junkyard - Could be useful later               
+    //*****************************************************************/
+
+    // foreach (var message in _chatMessages)
+    // {
+    //     //chatCompletionsOptions.Messages.Add(message);
+    //     _customCompletionOptions.ChatMessages.Add(message);
+    // }
+
+    // // call ChatBot Service with the prompt to execute completion
+
+    // var completion = await ChatCompletion.ChatCompletionAsync(ezCompletionOptions);
+
+
+    // // // Call the GetChatCompletionsAsync method
+    // // Response<ChatCompletions> responseWithoutStream =
+    // // await client.GetChatCompletionsAsync(
+    // //     DeploymentOrModelName,
+    // //     chatCompletionsOptions);
+
+    // // // Get the ChatCompletions object from the response
+    // // ChatCompletions result = responseWithoutStream.Value;
+
+    // // Create a new OpenAIClient object
+    // // with the provided API key and Endpoint
+    // OpenAIClient client = new OpenAIClient(
+    //     new Uri(Endpoint),
+    //     new AzureKeyCredential(Key));
+
+    // // Create a new ChatCompletionsOptions object
+    // var chatCompletionsOptions = new ChatCompletionsOptions()
+    //     {
+    //         Temperature = (float)0.7,
+    //         MaxTokens = 2000,
+    //         NucleusSamplingFactor = (float)0.95,
+    //         FrequencyPenalty = 0,
+    //         PresencePenalty = 0,
+    //     };
+
+    // // Add the prompt to the chatCompletionsOptions object
+    // foreach (var message in ChatMessages)
+    // {
+    //     chatCompletionsOptions.Messages.Add(message);
+    // }
+
+    @*  <div id="tokenmeter" class="bi bi-house-door-fill-nav-menu">
+        <b>Conversation Tokens:</b> @TotalTokens
+        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span>
+        <img style="width: 20px; height: 20px" src="Images/tokenmeter.png" alt="image" />
+    </div> *@
+
+
+    @* @if (chatMessages.Count >1)
+    {
+        <div class="wrapper" style="background:#f7f7f7;font-family: arial !important; font-size: 0.9em !important">
+            <label>Token Management</label>
+            <b>Conversation Tokens:</b> @TotalTokens &nbsp;&nbsp;&nbsp;&nbsp;<b>ChatTurn Suggestion Tokens:</b> @SuggestionTokens
+        </div>
+    } *@
+
+
+
+    // Chain together ChatHistory Assistant messages into single string by chaining Linq statements
+    // ChatHistory = string.Join(" ", chatMessages.Where(x => x.Role == ChatRole.Assistant).Select(x => x.Content))
+
+    // Save for later feature
+    // SystemPrompt = new ChatRequestSystemMessage("You are helpful Assistant"),
+
+
+    @* Html for Border: https://stackoverflow.com/questions/37983488/how-to-place-a-text-inside-the-top-left-corner-border-of-div *@
+
+
+    @*      <div class="wrapper" style="display: flex; justify-content: center; margin-bottom: 20px;background:#f7f7f7;">
+            <label>Suggestions</label>
+            @foreach (var suggestion in suggestions)
+            {
+                <div style="background-color: #d6d6d6; border: 1px solid black; border-radius: 10px; padding: 10px; margin: 5px;text-align: center;">
+                    <a href="#" @onclick="() => AssignToPromptTextArea(suggestion)" style="font-family: arial !important; font-size: 0.9em !important;">@suggestion</a>
+                </div>
+            }
+        </div> *@
+
+
+
+    @* Suggestions *@
+    @* <div class="toast-container position-static w-100 d-flex flex-column align-items-stretch"> *@
+    @* <div class="toast fade show full-width rounded-3">
+
+            <div class="toast fade show full-width rounded-3">
+
+
+                <div class="toast-header @("bg-red text-white")">
+                    <i class="bi @("bi-robot") me-1" aria-hidden="true"></i>
+                </div>
+
+            </div>
+
+        </div> *@
+
+
+
+    @* Old Code *@
+
+    @*     <div id="chatturns" style="width:80%; overflow: auto;"> *@
+
+
+    @*  @if (RenderChatMessages)
+        {
+            @foreach (var item in chatMessages)
+            {
+                <div>
+                    @if (item.Role == Role.User)
+                    {
+                        <div style="float: right; margin-right: 30px; margin-top: 10px">
+                            <b>User</b>
+                        </div>
+                        <div class="@item.Role">
+                            <div class="msg">
+                                @item.Content
+                            </div>
+                        </div>
+                    }
+
+                    @if (item.Role == Role.Assistant)
+                    {
+                        <div style="float: left; margin-left: 10px; margin-top: 10px">
+                            <b>Assistant&nbsp;&nbsp;</b>
+                        </div>
+                        <div class="@item.Role">
+                            <div class="msg">
+                                @if (item.Content != null)
+                                {
+                                    @((MarkupString)item.Content.ToHtml())
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        } *@
+
+    @* </div> *@
+
+    @* <div id="div-prompt-area" style="display: flex; justify-content: space-between;align-items: center;width: 100%;">
+                 <div id="div-prompt" style="width: 90%;">
+                    <textarea id="text-area-prompt" rows="4" cols="60" @bind="prompt" title="Enter your prompt here" style="width: 100%;"/>
+                </div>
+                <div id="buttons" style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <div>
+                        <button class="btn btn-primary" id="btn-primary" disabled="@string.IsNullOrEmpty(prompt)" @onclick="async() => { PreCallChatGPT(); }">
+                            Ask AI.....
+                        </button>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="btn btn-info"
+                            @onclick="RestartChatGPT">
+                            New Chat
+                       </button>
+                    </div>
+                </div>
+          </div>
+ *@
+
+}

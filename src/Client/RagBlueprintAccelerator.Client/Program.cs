@@ -1,10 +1,23 @@
-using Contracts;
+using Shared.Contracts;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using RagBlueprintAccelerator.Client;
 using RagBlueprintAccelerator.Client.Contracts;
 using RagBlueprintAccelerator.Client.Services;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.Extensions.DependencyInjection;
+
+//using Microsoft.FluentUI.AspNetCore.Components.Components;
+
+
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+
+//builder.RootComponents.Add<App>("#app");
+
+//// Add this line:
+//builder.RootComponents.Add<Loading>("body > div:first-child");
+
+
 
 //builder.Services.AddSingleton(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
@@ -40,6 +53,10 @@ builder.Services.AddSingleton(sp => new HttpClient
     Timeout = TimeSpan.FromMinutes(5) // Increase the timeout to 5 minutes
 });
 
+
+builder.Services.AddBlazorBootstrap();
+builder.Services.AddSingleton<Microsoft.FluentUI.AspNetCore.Components.LibraryConfiguration>();
+//builder.Services.AddFluentUIComponents();
 
 //builder.Services.AddHttpClient<POCService>(client =>
 //{

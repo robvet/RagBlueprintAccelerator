@@ -11,9 +11,10 @@
 @using Shared;
 @using Shared.Enums;
 @using RagBlueprintAccelerator;
+@using Shared.Contracts;
 
 @inject IConfiguration _configuration
-@inject Contracts.IChatCompletion ChatCompletion
+@inject IChatCompletion ChatCompletion
 @inject IJSRuntime _jsRuntime
 
 <PageTitle>ChatBot</PageTitle>
@@ -137,7 +138,7 @@
     <br />
 
     <button class="btn btn-primary"
-        @onclick="async() => { CallChatGPT(); }">
+        @onclick="async() => { await CallChatGPT(); }">
         Call ChatGPT
     </button>
 

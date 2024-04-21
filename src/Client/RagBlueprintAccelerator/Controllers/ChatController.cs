@@ -1,10 +1,10 @@
 ﻿using Azure;
 using Azure.AI.OpenAI;
-using Contracts;
 using RagBlueprintAccelerator.Client.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
+using Shared.Contracts;
 
 
 namespace RagBlueprintAccelerator.Controllers
@@ -33,7 +33,7 @@ namespace RagBlueprintAccelerator.Controllers
 
         //POST: POCController/Create
         [HttpPost]
-        public async Task<ActionResult> PostCompletion([FromBody] EZCompletionOptions completionOptions)
+        public async Task<ActionResult> PostCompletion([FromBody] CompletionOverrides completionOptions)
         {
 
             //(ChatCompletions response, ChatCompletions followup, int promptTokens, int responseTokens, int suggestionTokens) = await _chatCompletion.ChatCompletionAsync(completionOptions);
