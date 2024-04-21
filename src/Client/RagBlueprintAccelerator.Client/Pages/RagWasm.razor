@@ -16,14 +16,13 @@
 @using BlazorBootstrap;
 @using Microsoft.FluentUI.AspNetCore.Components;
 @using System.ComponentModel.DataAnnotations;
-@using Microsoft.FluentUI.AspNetCore.Components;
 
 @inject IChatService _chatService
 @inject IConfiguration _configuration
 @* @inject Contracts.IChatCompletion ChatCompletion *@
 @inject IJSRuntime _jsRuntime
 
-<PageTitle>Unstructured RAG Demo</PageTitle>
+<PageTitle>ChatBot</PageTitle>
 
 <style>
     textarea {
@@ -172,7 +171,7 @@
     }
 </script>
 
-<div id="top-content-div" style="height: 65px; background-color: #2C0DC0;margin-bottom:25px; display: flex; justify-content: flex-end; align-items: center;">
+<div id="top-content-div" style="height: 50px; background-color: #F7F7F7;margin-bottom:25px; display: flex; justify-content: flex-end; align-items: center;">
     <img src="images/settings9.png" title="Configure Completion Options" alt="Image" style="vertical-align: middle; max-height: 70%; margin-right: 0.5in;" @onclick="OnShowModalClick">
 </div>
 
@@ -183,7 +182,7 @@
     <!-- Header and Token Count -->
     <div style="display: flex; justify-content: space-between;align-items: center;">
         <div id="name">
-            <h3>Unstructured RAG Demo</h3>
+            <h3>ChatBot</h3>
         </div>
         @if (chatMessages.Count > 1)
         {
@@ -225,7 +224,7 @@
                         @foreach (var suggestion in suggestions)
                         {
                             <div style="background-color: #d6d6d6; border: 1px solid black; border-radius: 10px; padding: 10px; margin: 5px;text-align: center;">
-                                <a href="/ragwasm" @onclick:preventDefault="true" @onclick="() => AssignToPromptTextArea(suggestion)" style="font-family: arial !important; font-size: 0.9em !important;">@suggestion</a>
+                                <a href="/" @onclick:preventDefault="true" @onclick="() => AssignToPromptTextArea(suggestion)" style="font-family: arial !important; font-size: 0.9em !important;">@suggestion</a>
                             </div>
                         }
                     </div>
@@ -278,19 +277,9 @@
 
 
 
-                            @if (suggestions?.Length > 0)
+                         @*    @if (suggestions?.Length > 0)
                             {
-                                    @* <div class="toast fade show w-100 rounded-3">
-
-                                        <div class="toast-header @("bg-red text-white")">
-                                            <i class="bi @("bi-lightbulb") me-1" aria-hidden="true"></i>
-                                            <strong class="me-auto text-capitalize">
-                                                Suggestions
-                                            </strong>
-                                            <span class="me-2 badge rounded-pill bg-light" style="color: black;">
-                                                Tokens: @SuggestionTokens
-                                            </span>
-                                        </div> *@
+                                  
                                         <div class="toast-body" style="display: flex; flex-direction: row; justify-content: center;">
 
                                             @foreach (var suggestion in suggestions)
@@ -300,8 +289,8 @@
                                                 </div>
                                             }
                                         </div>
-                                    @* </div> *@
-                            }
+                                  
+                            } *@
 
 
 
@@ -335,7 +324,7 @@
                 </button>
 
 
-            <button type="button" class="btn btn-primary" @onclick="OnShowModalClick">Show Modal</button>
+            @* <button type="button" class="btn btn-primary" @onclick="OnShowModalClick">Show Modal</button> *@
         </div>
     </div>
     
