@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Services\ChatBotService\ChatBotService.csproj" />
-    <ProjectReference Include="..\..\Services\FullChatService\SimpleChatService.csproj" />
     <ProjectReference Include="..\RagBlueprintAccelerator.Client\RagBlueprintAccelerator.Client.csproj" />
   </ItemGroup>
 

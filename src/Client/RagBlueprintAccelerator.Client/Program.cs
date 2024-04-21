@@ -29,9 +29,6 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 IConfiguration configuration = builder.Configuration;
 
 builder.Services.AddSingleton<IChatService, ChatService>();
-builder.Services.AddSingleton<ISimpleChatService, SimpleChatService>();
-//builder.Services.AddSingleton<IDataExtractionCompletion, DataExtractionCompletion>();
-builder.Services.AddScoped<IPOCService, POCService>();
 
 // .NET 8 feature to register multiple services implementations of the same interface
 //builder.Services.AddScoped<Func<string, IChatService>>(serviceProvider => key =>

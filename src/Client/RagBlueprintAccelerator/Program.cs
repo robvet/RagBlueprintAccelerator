@@ -5,7 +5,6 @@ using RagBlueprintAccelerator.Client.Pages;
 using RagBlueprintAccelerator.Client.Services;
 using RagBlueprintAccelerator.Components;
 using RagBlueprintAccelerator;
-using SimpleChatService.Services;
 using Shared.Contracts;
 using TokenManagementService.Services;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -39,11 +38,9 @@ builder.Services.AddSingleton<Microsoft.FluentUI.AspNetCore.Components.LibraryCo
 
 // Register external services with DI container
 builder.Services.AddSingleton<IChatCompletion, ChatCompletion>();
-builder.Services.AddSingleton<ISimpleChatCompletion, SimpleChatCompletion>();
 
 //builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IChatService, ChatService>();
-builder.Services.AddScoped<IPOCService, POCService>();
 builder.Services.AddSingleton<ITokenManager, SlidingWindowWithDecay>();
 //builder.Services.AddSingleton<IChatService, ChatService>();
 

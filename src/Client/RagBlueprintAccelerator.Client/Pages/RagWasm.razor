@@ -22,7 +22,7 @@
 @* @inject Contracts.IChatCompletion ChatCompletion *@
 @inject IJSRuntime _jsRuntime
 
-<PageTitle>ChatBot</PageTitle>
+<PageTitle>Assistants API</PageTitle>
 
 <style>
     textarea {
@@ -176,13 +176,13 @@
 </div>
 
 @* <div class="h-90 mh-100 d-flex flex-column overflow-hidden justify-content-start"> *@
-<div class="d-flex flex-column justify-content-between" style="height: 91vh;">
+<div class="d-flex flex-column justify-content-between" style="height: 93vh;">
 @* <div class="h-100 d-flex flex-column overflow-hidden justify-content-start"> *@
 
     <!-- Header and Token Count -->
     <div style="display: flex; justify-content: space-between;align-items: center;">
         <div id="name">
-            <h3>ChatBot</h3>
+            <h3>Assistants API</h3>
         </div>
         @if (chatMessages.Count > 1)
         {
